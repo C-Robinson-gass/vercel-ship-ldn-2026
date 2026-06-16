@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+  (function() {
+    var stored = sessionStorage.getItem('gass_auth');
+    if (stored !== 'gass1') {
+      document.documentElement.style.display = 'none';
+      var pwd = prompt('Enter password to access this run of show:');
+      if (pwd === 'gass1') {
+        sessionStorage.setItem('gass_auth', 'gass1');
+        document.documentElement.style.display = '';
+      } else {
+        document.documentElement.style.display = '';
+        document.body.innerHTML = '<div style="font-family:sans-serif;background:#030303;color:#fff;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;"><div style="font-size:24px;font-weight:700;color:#FFE293;">Access Denied</div><div style="color:#A8ABB4;">Incorrect password. Please refresh to try again.</div></div>';
+      }
+    }
+  })();
+</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Run of Show — Vercel Ship LDN 26</title>
