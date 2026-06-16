@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Run of Show — Vercel Ship LDN 26</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black:#000000; --near-black:#030303; --white:#FFFFFF; --gold:#FFE293;
+      --charcoal:#212121; --mid-grey:#A8ABB4;
+      --col-keynote:#FFE293; --col-sponsor:#4A90D9; --col-panel:#9B7FD4;
+      --col-mc:#6DBF85; --col-auth0:#EB5424; --col-openai:#10A37F;
+    }
+    body { font-family: 'Outfit', sans-serif; background: var(--near-black); color: var(--white); min-height: 100vh; }
+    header { background: var(--black); border-bottom: 2px solid var(--gold); padding: 20px 48px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .header-event { text-align: right; }
+    .event-title { font-size: 26px; font-weight: 700; line-height: 1.2; }
+    .event-meta { font-size: 13px; color: var(--mid-grey); margin-top: 5px; }
+    .hero-band { background: var(--gold); padding: 12px 48px; display: flex; align-items: center; gap: 16px; }
+    .hero-band-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--charcoal); white-space: nowrap; }
+    .hero-band-divider { flex: 1; height: 1px; background: rgba(33,33,33,0.2); }
+    .hero-band-details { font-size: 13px; font-weight: 600; color: var(--charcoal); white-space: nowrap; }
+    .tab-bar { background: #0a0a0a; border-bottom: 1px solid #1e1e1e; padding: 0 48px; display: flex; gap: 0; overflow-x: auto; }
+    .tab-btn { padding: 14px 20px; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--mid-grey); background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; transition: color 0.15s, border-color 0.15s; }
+    .tab-btn:hover { color: var(--white); }
+    .tab-btn[data-tab="full"].active     { border-bottom-color: var(--mid-grey); color: var(--white); }
+    .tab-btn[data-tab="keynotes"].active { border-bottom-color: var(--col-keynote); color: var(--col-keynote); }
+    .tab-btn[data-tab="sessions"].active { border-bottom-color: var(--col-sponsor); color: var(--col-sponsor); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    main { padding: 40px 48px; max-width: 1200px; margin: 0 auto; }
+    .stage-header { padding: 14px 48px; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+    .stage-header.full     { background: rgba(168,171,180,0.06); color: var(--mid-grey); border-bottom: 1px solid rgba(168,171,180,0.15); }
+    .stage-header.keynotes { background: rgba(255,226,147,0.08); color: var(--col-keynote); border-bottom: 1px solid rgba(255,226,147,0.15); }
+    .stage-header.sessions { background: rgba(74,144,217,0.08); color: var(--col-sponsor); border-bottom: 1px solid rgba(74,144,217,0.15); }
+    .day-header { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); padding: 20px 0 10px; border-bottom: 1px solid #222; margin-bottom: 16px; margin-top: 8px; }
+    .session-group { margin-bottom: 8px; }
+    .time-row { display: flex; gap: 0; align-items: stretch; min-height: 60px; }
+    .cue-col { width: 44px; min-width: 44px; padding: 12px 8px 12px 0; display: flex; align-items: flex-start; }
+    .cue-num { font-size: 11px; font-weight: 700; color: #444; background: #1a1a1a; border-radius: 3px; padding: 2px 5px; }
+    .time-col { width: 100px; min-width: 100px; padding: 12px 16px 12px 0; display: flex; flex-direction: column; justify-content: flex-start; gap: 2px; }
+    .time-main { font-size: 16px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+    .time-range { font-size: 11px; color: var(--mid-grey); white-space: nowrap; }
+    .session-card { flex: 1; border-left: 3px solid var(--gold); border-radius: 4px; padding: 12px 16px; display: flex; flex-direction: column; gap: 5px; margin-bottom: 4px; background: #111; }
+    .session-card.keynote   { border-left-color: var(--col-keynote); background: #181400; }
+    .session-card.sponsor   { border-left-color: var(--col-sponsor); background: #060e18; }
+    .session-card.panel     { border-left-color: var(--col-panel);   background: #0e0818; }
+    .session-card.mc        { border-left-color: var(--col-mc);      background: #081008; }
+    .session-card.break-card{ border-left-color: #444; background: #0a0a0a; opacity: 0.75; }
+    .session-card.rehearsal { border-left-color: #555; background: #0d0d0d; }
+    .session-card.auth0     { border-left-color: var(--col-auth0);   background: #180800; }
+    .session-card.openai    { border-left-color: var(--col-openai);  background: #021008; }
+    .session-type-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .session-type { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--mid-grey); }
+    .session-tag  { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .tag-keynote  { color: var(--col-keynote); }
+    .tag-sponsor  { color: var(--col-sponsor); }
+    .tag-panel    { color: var(--col-panel); }
+    .tag-mc       { color: var(--col-mc); }
+    .tag-auth0    { color: var(--col-auth0); }
+    .tag-openai   { color: var(--col-openai); }
+    .session-title  { font-size: 15px; font-weight: 700; line-height: 1.3; }
+    .session-desc   { font-size: 13px; color: var(--mid-grey); line-height: 1.6; }
+    .session-speakers { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 3px; }
+    .speaker        { font-size: 12px; font-weight: 600; }
+    .speaker span   { color: var(--mid-grey); font-weight: 400; }
+    .session-meta   { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 4px; }
+    .meta-item      { font-size: 11px; color: #555; }
+    .meta-item strong { color: #777; }
+    .divider { height: 1px; background: #1e1e1e; margin: 4px 0 4px 144px; }
+    footer { background: var(--black); border-top: 1px solid #1e1e1e; padding: 24px 48px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
+    .footer-left { font-size: 12px; color: var(--mid-grey); line-height: 1.6; }
+    .footer-left strong { color: var(--white); }
+    .footer-right { font-size: 11px; color: var(--mid-grey); text-align: right; }
+    .footer-right a { color: var(--gold); text-decoration: none; }
+    @media (max-width: 700px) {
+      header, .hero-band, .stage-header { padding-left: 20px; padding-right: 20px; }
+      main { padding: 24px 20px; }
+      footer { padding: 20px; }
+      .tab-bar { padding: 0 12px; }
+      header { flex-direction: column; align-items: flex-start; }
+      .header-event { text-align: left; }
+      .event-title { font-size: 20px; }
+      .time-col { width: 72px; min-width: 72px; }
+      .time-main { font-size: 14px; }
+      .cue-col { width: 32px; min-width: 32px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="gass_logo.png" alt="gassProductions" style="height:44px;width:auto;display:block;" />
+  <div class="header-event">
+    <div class="event-title">Vercel Ship LDN 26</div>
+    <div class="event-meta">Run of Show &nbsp;·&nbsp; Magazine London &nbsp;·&nbsp; 17 June 2026</div>
+  </div>
+</header>
+
+<div class="hero-band">
+  <div class="hero-band-label">Venue</div>
+  <div class="hero-band-divider"></div>
+  <div class="hero-band-details">Magazine London &nbsp;·&nbsp; 11 Ordnance Crescent, London SE10 0JH &nbsp;·&nbsp; 07:00 – End</div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="full">Full Show</button>
+  <button class="tab-btn" data-tab="keynotes">Keynotes</button>
+  <button class="tab-btn" data-tab="sessions">Sponsor Sessions</button>
+</div>
+
+<!-- FULL SHOW -->
+<div class="tab-panel active" id="panel-full">
+  <div class="stage-header full">Full Show Flow &nbsp;·&nbsp; 17 June 2026 &nbsp;·&nbsp; All Times BST</div>
+  <main>
+
+    <div class="day-header">Pre-Show — Crew &amp; Rehearsal</div>
+
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">1</div></div>
+      <div class="time-col"><div class="time-main">07:00</div><div class="time-range">1 hr</div></div>
+      <div class="session-card rehearsal"><div class="session-type-row"><div class="session-type">Crew Call</div></div><div class="session-title">Crew Call</div><div class="session-meta"><span class="meta-item"><strong>Audio:</strong> —</span><span class="meta-item"><strong>GFX:</strong> —</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">2</div></div>
+      <div class="time-col"><div class="time-main">08:00</div><div class="time-range">1h 30m</div></div>
+      <div class="session-card rehearsal"><div class="session-type-row"><div class="session-type">Rehearsal</div></div><div class="session-title">Rehearsal — Opening</div><div class="session-speakers"><div class="speaker">Hedi</div><div class="speaker">Shar</div><div class="speaker">Malte</div><div class="speaker">Jeanne</div></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">3</div></div>
+      <div class="time-col"><div class="time-main">09:30</div><div class="time-range">30 min</div></div>
+      <div class="session-card break-card"><div class="session-type-row"><div class="session-type">Doors Open</div></div><div class="session-title">Plenary Doors Open</div><div class="session-meta"><span class="meta-item"><strong>Audio:</strong> Playlist</span><span class="meta-item"><strong>GFX:</strong> Keynote Loop — Agenda, Sponsors</span><span class="meta-item"><strong>LX:</strong> Walk-in</span><span class="meta-item"><strong>Notes:</strong> Preset demo laptop on lectern</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+
+    <div class="day-header">Show — Morning Keynotes (10:00–11:05)</div>
+
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">4</div></div>
+      <div class="time-col"><div class="time-main">10:00</div><div class="time-range">—</div></div>
+      <div class="session-card break-card"><div class="session-type-row"><div class="session-type">Show Begins</div></div><div class="session-title">Show Begins</div><div class="session-meta"><span class="meta-item"><strong>GFX:</strong> Logo</span><span class="meta-item"><strong>LX:</strong> Settle</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">5</div></div>
+      <div class="time-col"><div class="time-main">10:00</div><div class="time-range">1 min</div></div>
+      <div class="session-card keynote"><div class="session-type-row"><div class="session-type">VOG</div><div class="session-tag tag-keynote">Opening</div></div><div class="session-title">VOG — "Please welcome to the stage Vercel CEO, Guillermo Rauch"</div><div class="session-desc">Pronunciation: Gee-er-mo Rau-sh</div><div class="session-meta"><span class="meta-item"><strong>Audio:</strong> VOG w/sting</span><span class="meta-item"><strong>GFX:</strong> Logo</span><span class="meta-item"><strong>LX:</strong> Ballyhoo w/chase</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">6</div></div>
+      <div class="time-col"><div class="time-main">10:01</div><div class="time-range">30s</div></div>
+      <div class="session-card keynote"><div class="session-type-row"><div class="session-type">Transition</div></div><div class="session-title">Guillermo Takes Stage</div><div class="session-meta"><span class="meta-item"><strong>GFX:</strong> 3 Screen PIP — Keynote Master Deck</span><span class="meta-item"><strong>LX:</strong> Show look</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">7</div></div>
+      <div class="time-col"><div class="time-main">10:01</div><div class="time-range">15 min</div></div>
+      <div class="session-card keynote"><div class="session-type-row"><div class="session-type">Keynote</div><div class="session-tag tag-keynote">Opening Keynote</div></div><div class="session-title">Keynote — Guillermo Rauch</div><div class="session-speakers"><div class="speaker">Guillermo Rauch <span>— Founder &amp; CEO, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 1</span><span class="meta-item"><strong>GFX:</strong> Keynote Master Deck</span><span class="meta-item"><strong>Notes:</strong> Presenter notes on lectern</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">8</div></div>
+      <div class="time-col"><div class="time-main">10:16</div><div class="time-range">25 min</div></div>
+      <div class="session-card keynote"><div class="session-type-row"><div class="session-type">Keynote</div><div class="session-tag tag-keynote">w/ Live Demo</div></div><div class="session-title">Keynote — TomO w/Demos</div><div class="session-desc">Tom starts in deck, transitions to Hedi &amp; Shar for live demo.</div><div class="session-speakers"><div class="speaker">Tom Occhino <span>— CPO, Vercel</span></div><div class="speaker">Hedi Zandi <span>— Vercel</span></div><div class="speaker">Shar Dara <span>— Product Manager, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Radio mics 2, 3, 4</span><span class="meta-item"><strong>GFX:</strong> Keynote</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">9</div></div>
+      <div class="time-col"><div class="time-main">10:41</div><div class="time-range">10 min</div></div>
+      <div class="session-card keynote"><div class="session-type-row"><div class="session-type">Keynote</div></div><div class="session-title">Keynote — Malte</div><div class="session-speakers"><div class="speaker">Malte Ubl <span>— CTO, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 5</span><span class="meta-item"><strong>GFX:</strong> Keynote</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">10</div></div>
+      <div class="time-col"><div class="time-main">10:51</div><div class="time-range">10 min</div></div>
+      <div class="session-card keynote"><div class="session-type-row"><div class="session-type">Keynote</div></div><div class="session-title">Keynote — Jeanne</div><div class="session-speakers"><div class="speaker">Jeanne Grosse <span>— COO, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 6</span><span class="meta-item"><strong>GFX:</strong> Keynote</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">11</div></div>
+      <div class="time-col"><div class="time-main">11:01</div><div class="time-range">4 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div><div class="session-tag tag-mc">Housekeeping</div></div><div class="session-title">Housekeeping — MCs Intro Schedule</div><div class="session-speakers"><div class="speaker">Alli Pope <span>— Head of Media, Vercel</span></div><div class="speaker">Melkey Moks</div></div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Radio mics 7, 8</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">12</div></div>
+      <div class="time-col"><div class="time-main">11:05</div><div class="time-range">10 min</div></div>
+      <div class="session-card break-card"><div class="session-type-row"><div class="session-type">Break</div></div><div class="session-title">Break</div><div class="session-meta"><span class="meta-item"><strong>Audio:</strong> Playlist</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+
+    <div class="day-header">Sponsor Sessions — Block 1 (11:15–12:15)</div>
+
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">13</div></div>
+      <div class="time-col"><div class="time-main">11:15</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey welcome Anthropic</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">14</div></div>
+      <div class="time-col"><div class="time-main">11:16</div><div class="time-range">18 min</div></div>
+      <div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 1</div><div class="session-tag tag-sponsor">Anthropic</div></div><div class="session-title">Session 1 — Anthropic</div><div class="session-speakers"><div class="speaker">Andre Balleyguier <span>— Applied AI Leader, Anthropic</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 2</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">15</div></div>
+      <div class="time-col"><div class="time-main">11:34</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey welcome Currys</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">16</div></div>
+      <div class="time-col"><div class="time-main">11:35</div><div class="time-range">19 min</div></div>
+      <div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 2</div><div class="session-tag tag-sponsor">Currys / Elkjop</div></div><div class="session-title">Session 2 — Currys Elkjop</div><div class="session-speakers"><div class="speaker">Currys / Elkjop <span>— Principal Software Engineer</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 3</span><span class="meta-item"><strong>GFX:</strong> SHIP 26 LDN — Elkjop</span><span class="meta-item"><strong>Notes:</strong> Embedded Videos</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">17</div></div>
+      <div class="time-col"><div class="time-main">11:54</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey welcome Matan</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">18</div></div>
+      <div class="time-col"><div class="time-main">11:55</div><div class="time-range">19 min</div></div>
+      <div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 3</div><div class="session-tag tag-sponsor">Vercel</div></div><div class="session-title">Session 3 — Vercel Agent</div><div class="session-speakers"><div class="speaker">Matan Kushner <span>— Software Engineer, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 4</span><span class="meta-item"><strong>GFX:</strong> Vercel Agent — SHIP 26</span><span class="meta-item"><strong>Notes:</strong> Embedded Videos</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">19</div></div>
+      <div class="time-col"><div class="time-main">12:14</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey send to Lunch</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span><span class="meta-item"><strong>Notes:</strong> Preset 5 chairs on stage</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">20</div></div>
+      <div class="time-col"><div class="time-main">12:15</div><div class="time-range">45 min</div></div>
+      <div class="session-card break-card"><div class="session-type-row"><div class="session-type">Lunch</div></div><div class="session-title">Lunch Break</div></div>
+    </div></div>
+    <div class="divider"></div>
+
+    <div class="day-header">AI Panel + Sponsor Sessions — Block 2 (13:00–14:29)</div>
+
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">R</div></div>
+      <div class="time-col"><div class="time-main">13:00</div><div class="time-range">15 min</div></div>
+      <div class="session-card rehearsal"><div class="session-type-row"><div class="session-type">Rehearsal</div></div><div class="session-title">Rehearsal — AI Panel (No Stage Time)</div><div class="session-desc">Check-in with panelists. Stage: 5 chairs preset.</div><div class="session-speakers"><div class="speaker">Jeanne Grosser <span>— MOD</span></div><div class="speaker">Nicolas Le Pallec <span>— CTO, AKQA</span></div><div class="speaker">Ryan den Rooijen <span>— Head of AI, Currys</span></div><div class="speaker">Andre Balleyguier <span>— Applied AI, Anthropic</span></div><div class="speaker">Arthur Viegers <span>— Cursor</span></div></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">21</div></div>
+      <div class="time-col"><div class="time-main">13:15</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey welcome the AI Panel</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Radio mics 7, 8</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">22</div></div>
+      <div class="time-col"><div class="time-main">13:16</div><div class="time-range">27 min</div></div>
+      <div class="session-card panel"><div class="session-type-row"><div class="session-type">Session 4</div><div class="session-tag tag-panel">AI Panel</div></div><div class="session-title">Session 4 — AI Panel</div><div class="session-speakers"><div class="speaker">Jeanne Grosser <span>— COO, Vercel (MOD)</span></div><div class="speaker">Nicolas Le Pallec <span>— CTO, AKQA</span></div><div class="speaker">Ryan den Rooijen <span>— Head of AI, Currys</span></div><div class="speaker">Andre Balleyguier <span>— Applied AI, Anthropic</span></div><div class="speaker">Arthur Viegers <span>— Cursor</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Radio mics 6, 1, 2, 3, 4</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">23</div></div>
+      <div class="time-col"><div class="time-main">13:43</div><div class="time-range">30s</div></div>
+      <div class="session-card break-card"><div class="session-type-row"><div class="session-type">Transition</div></div><div class="session-title">Stage Transition</div><div class="session-meta"><span class="meta-item"><strong>Audio:</strong> Music bed</span><span class="meta-item"><strong>LX:</strong> Kill wash</span><span class="meta-item"><strong>Notes:</strong> Clear stage furniture</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">24</div></div>
+      <div class="time-col"><div class="time-main">13:44</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey welcome Auth0</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>GFX:</strong> PPT</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">25</div></div>
+      <div class="time-col"><div class="time-main">13:45</div><div class="time-range">19 min</div></div>
+      <div class="session-card auth0"><div class="session-type-row"><div class="session-type">Session 5</div><div class="session-tag tag-auth0">Auth0</div></div><div class="session-title">Session 5 — Auth0</div><div class="session-speakers"><div class="speaker">Jas Sagoo <span>— Head of Sales &amp; Strategy, Auth0</span></div><div class="speaker">Sam Bellen <span>— Principal Developer Advocate, Auth0</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Radio mics 5, 6</span><span class="meta-item"><strong>GFX:</strong> SHIP 2026 LDN — Auth0</span><span class="meta-item"><strong>Notes:</strong> Demo/video</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">26</div></div>
+      <div class="time-col"><div class="time-main">14:04</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey welcome Abhi</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>GFX:</strong> PPT</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">27</div></div>
+      <div class="time-col"><div class="time-main">14:05</div><div class="time-range">19 min</div></div>
+      <div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 6</div><div class="session-tag tag-sponsor">Vercel</div></div><div class="session-title">Session 6 — Vercel Data Agent</div><div class="session-speakers"><div class="speaker">Abhi Sivasailam <span>— VP of Data, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 2</span><span class="meta-item"><strong>GFX:</strong> Vercel_Data_Agent_SHIP26</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">28</div></div>
+      <div class="time-col"><div class="time-main">14:24</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey send to Break</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">29</div></div>
+      <div class="time-col"><div class="time-main">14:25</div><div class="time-range">10 min</div></div>
+      <div class="session-card break-card"><div class="session-type-row"><div class="session-type">Break</div></div><div class="session-title">Break</div><div class="session-meta"><span class="meta-item"><strong>Audio:</strong> Playlist</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+
+    <div class="day-header">Sponsor Sessions — Block 3 (14:35–15:44)</div>
+
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">30</div></div>
+      <div class="time-col"><div class="time-main">14:35</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey welcome OpenAI</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>GFX:</strong> PPT</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">31</div></div>
+      <div class="time-col"><div class="time-main">14:36</div><div class="time-range">10 min</div></div>
+      <div class="session-card openai"><div class="session-type-row"><div class="session-type">Session 7</div><div class="session-tag tag-openai">OpenAI</div></div><div class="session-title">Session 7 — OpenAI</div><div class="session-speakers"><div class="speaker">Romain Huet <span>— Head of Developer Experience, OpenAI</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 2</span><span class="meta-item"><strong>GFX:</strong> PPT</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">32</div></div>
+      <div class="time-col"><div class="time-main">14:46</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey welcome Callstack</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>GFX:</strong> PPT</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">33</div></div>
+      <div class="time-col"><div class="time-main">14:47</div><div class="time-range">18 min</div></div>
+      <div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 8</div><div class="session-tag tag-sponsor">Callstack</div></div><div class="session-title">Session 8 — Callstack</div><div class="session-speakers"><div class="speaker">Michal Pierzchala <span>— Principal Engineer, Callstack</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 3</span><span class="meta-item"><strong>GFX:</strong> SHIP 2026 — Callstack</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">34</div></div>
+      <div class="time-col"><div class="time-main">15:05</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey welcome ElevenLabs</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>GFX:</strong> PPT</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">35</div></div>
+      <div class="time-col"><div class="time-main">15:06</div><div class="time-range">18 min</div></div>
+      <div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 9</div><div class="session-tag tag-sponsor">ElevenLabs</div></div><div class="session-title">Session 9 — ElevenLabs: Building Voice Agents with ElevenLabs and AI SDK</div><div class="session-desc">Voice is the most natural interface for AI. This talk shows how ElevenLabs and Vercel's AI SDK enable real-time voice agents that listen, reason, and respond.</div><div class="session-speakers"><div class="speaker">Alex Holt <span>— CTO Field Engineering, ElevenLabs</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 4</span><span class="meta-item"><strong>GFX:</strong> ElevenLabs real-time</span><span class="meta-item"><strong>Notes:</strong> Demo laptop</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">36</div></div>
+      <div class="time-col"><div class="time-main">15:24</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey welcome Vercel</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>GFX:</strong> PPT</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">37</div></div>
+      <div class="time-col"><div class="time-main">15:25</div><div class="time-range">19 min</div></div>
+      <div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 10</div><div class="session-tag tag-sponsor">Vercel</div></div><div class="session-title">Session 10 — Vercel: Software That Ships Itself</div><div class="session-speakers"><div class="speaker">Malavika Tadeusz <span>— Product Manager, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 5</span><span class="meta-item"><strong>GFX:</strong> SHIP 2026 — Software that ships itself</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">38</div></div>
+      <div class="time-col"><div class="time-main">15:44</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey dismiss to Break</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">39</div></div>
+      <div class="time-col"><div class="time-main">15:45</div><div class="time-range">15 min</div></div>
+      <div class="session-card break-card"><div class="session-type-row"><div class="session-type">Break</div></div><div class="session-title">Break</div><div class="session-meta"><span class="meta-item"><strong>Audio:</strong> Playlist</span><span class="meta-item"><strong>GFX:</strong> Keynote</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+
+    <div class="day-header">Closing — Fireside Chat &amp; Reception (16:00–End)</div>
+
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">40</div></div>
+      <div class="time-col"><div class="time-main">16:00</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey introduce closing Fireside Chat</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>GFX:</strong> Keynote</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">41</div></div>
+      <div class="time-col"><div class="time-main">16:01</div><div class="time-range">29 min</div></div>
+      <div class="session-card keynote"><div class="session-type-row"><div class="session-type">Fireside Chat</div><div class="session-tag tag-keynote">Closing</div></div><div class="session-title">Fireside Chat — Guillermo Rauch &amp; Harry Stebbings</div><div class="session-speakers"><div class="speaker">Guillermo Rauch <span>— CEO, Vercel</span></div><div class="speaker">Harry Stebbings <span>— Founder, 20VC</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Radio mics 2, 3</span><span class="meta-item"><strong>GFX:</strong> Keynote Master Deck</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">42</div></div>
+      <div class="time-col"><div class="time-main">16:30</div><div class="time-range">4 min</div></div>
+      <div class="session-card keynote"><div class="session-type-row"><div class="session-type">Closing Address</div></div><div class="session-title">Closing Address</div><div class="session-speakers"><div class="speaker">Guillermo Rauch <span>— CEO, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 1</span><span class="meta-item"><strong>GFX:</strong> Keynote</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">43</div></div>
+      <div class="time-col"><div class="time-main">16:34</div><div class="time-range">1 min</div></div>
+      <div class="session-card mc"><div class="session-type-row"><div class="session-type">MC</div></div><div class="session-title">Alli &amp; Melkey send to Reception</div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Walk-on, radio mics 7, 8</span><span class="meta-item"><strong>GFX:</strong> Keynote</span><span class="meta-item"><strong>LX:</strong> Ballyhoo</span></div></div>
+    </div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row">
+      <div class="cue-col"><div class="cue-num">END</div></div>
+      <div class="time-col"><div class="time-main">16:35</div><div class="time-range">—</div></div>
+      <div class="session-card break-card"><div class="session-type-row"><div class="session-type">End of Show</div></div><div class="session-title">END OF SHOW — Send to Reception</div><div class="session-meta"><span class="meta-item"><strong>Audio:</strong> Playlist</span></div></div>
+    </div></div>
+
+  </main>
+</div>
+
+<!-- KEYNOTES TAB -->
+<div class="tab-panel" id="panel-keynotes">
+  <div class="stage-header keynotes">Keynotes &amp; Fireside Chat</div>
+  <main>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">7</div></div><div class="time-col"><div class="time-main">10:01</div><div class="time-range">15 min</div></div><div class="session-card keynote"><div class="session-type-row"><div class="session-type">Opening Keynote</div></div><div class="session-title">Keynote — Guillermo Rauch</div><div class="session-speakers"><div class="speaker">Guillermo Rauch <span>— Founder &amp; CEO, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 1</span><span class="meta-item"><strong>GFX:</strong> Keynote Master Deck</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">8</div></div><div class="time-col"><div class="time-main">10:16</div><div class="time-range">25 min</div></div><div class="session-card keynote"><div class="session-type-row"><div class="session-type">Keynote w/ Live Demo</div></div><div class="session-title">Keynote — TomO w/Demos</div><div class="session-desc">Tom starts in deck, transitions to Hedi &amp; Shar for live demo.</div><div class="session-speakers"><div class="speaker">Tom Occhino <span>— CPO</span></div><div class="speaker">Hedi Zandi</div><div class="speaker">Shar Dara <span>— PM</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Radio mics 2, 3, 4</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">9</div></div><div class="time-col"><div class="time-main">10:41</div><div class="time-range">10 min</div></div><div class="session-card keynote"><div class="session-type-row"><div class="session-type">Keynote</div></div><div class="session-title">Keynote — Malte Ubl, CTO</div><div class="session-speakers"><div class="speaker">Malte Ubl <span>— CTO, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 5</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">10</div></div><div class="time-col"><div class="time-main">10:51</div><div class="time-range">10 min</div></div><div class="session-card keynote"><div class="session-type-row"><div class="session-type">Keynote</div></div><div class="session-title">Keynote — Jeanne Grosse, COO</div><div class="session-speakers"><div class="speaker">Jeanne Grosse <span>— COO, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 6</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">41</div></div><div class="time-col"><div class="time-main">16:01</div><div class="time-range">29 min</div></div><div class="session-card keynote"><div class="session-type-row"><div class="session-type">Fireside Chat</div><div class="session-tag tag-keynote">Closing</div></div><div class="session-title">Fireside Chat — Guillermo Rauch &amp; Harry Stebbings</div><div class="session-speakers"><div class="speaker">Guillermo Rauch <span>— CEO, Vercel</span></div><div class="speaker">Harry Stebbings <span>— Founder, 20VC</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Radio mics 2, 3</span><span class="meta-item"><strong>GFX:</strong> Keynote Master Deck</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">42</div></div><div class="time-col"><div class="time-main">16:30</div><div class="time-range">4 min</div></div><div class="session-card keynote"><div class="session-type-row"><div class="session-type">Closing Address</div></div><div class="session-title">Closing Address — Guillermo Rauch</div><div class="session-speakers"><div class="speaker">Guillermo Rauch <span>— CEO, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 1</span></div></div></div></div>
+  </main>
+</div>
+
+<!-- SPONSOR SESSIONS TAB -->
+<div class="tab-panel" id="panel-sessions">
+  <div class="stage-header sessions">Sponsor Sessions</div>
+  <main>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">14</div></div><div class="time-col"><div class="time-main">11:16</div><div class="time-range">18 min</div></div><div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 1</div><div class="session-tag tag-sponsor">Anthropic</div></div><div class="session-title">Session 1 — Anthropic</div><div class="session-speakers"><div class="speaker">Andre Balleyguier <span>— Applied AI Leader, Anthropic</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 2</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">16</div></div><div class="time-col"><div class="time-main">11:35</div><div class="time-range">19 min</div></div><div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 2</div><div class="session-tag tag-sponsor">Currys / Elkjop</div></div><div class="session-title">Session 2 — Currys Elkjop</div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 3</span><span class="meta-item"><strong>GFX:</strong> SHIP 26 LDN — Elkjop</span><span class="meta-item"><strong>Notes:</strong> Embedded Videos</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">18</div></div><div class="time-col"><div class="time-main">11:55</div><div class="time-range">19 min</div></div><div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 3</div><div class="session-tag tag-sponsor">Vercel</div></div><div class="session-title">Session 3 — Vercel Agent</div><div class="session-speakers"><div class="speaker">Matan Kushner <span>— Software Engineer, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 4</span><span class="meta-item"><strong>GFX:</strong> Vercel Agent SHIP 26</span><span class="meta-item"><strong>Notes:</strong> Embedded Videos</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">22</div></div><div class="time-col"><div class="time-main">13:16</div><div class="time-range">27 min</div></div><div class="session-card panel"><div class="session-type-row"><div class="session-type">Session 4</div><div class="session-tag tag-panel">AI Panel</div></div><div class="session-title">Session 4 — AI Panel</div><div class="session-speakers"><div class="speaker">Jeanne Grosser <span>— COO, Vercel (MOD)</span></div><div class="speaker">Nicolas Le Pallec <span>— CTO, AKQA</span></div><div class="speaker">Ryan den Rooijen <span>— Head of AI, Currys</span></div><div class="speaker">Andre Balleyguier <span>— Applied AI, Anthropic</span></div><div class="speaker">Arthur Viegers <span>— Cursor</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Radio mics 6, 1, 2, 3, 4</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">25</div></div><div class="time-col"><div class="time-main">13:45</div><div class="time-range">19 min</div></div><div class="session-card auth0"><div class="session-type-row"><div class="session-type">Session 5</div><div class="session-tag tag-auth0">Auth0</div></div><div class="session-title">Session 5 — Auth0</div><div class="session-speakers"><div class="speaker">Jas Sagoo <span>— Head of Sales &amp; Strategy</span></div><div class="speaker">Sam Bellen <span>— Principal Developer Advocate</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mics:</strong> Radio mics 5, 6</span><span class="meta-item"><strong>Notes:</strong> Demo/video</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">27</div></div><div class="time-col"><div class="time-main">14:05</div><div class="time-range">19 min</div></div><div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 6</div><div class="session-tag tag-sponsor">Vercel</div></div><div class="session-title">Session 6 — Vercel Data Agent</div><div class="session-speakers"><div class="speaker">Abhi Sivasailam <span>— VP of Data, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 2</span><span class="meta-item"><strong>GFX:</strong> Vercel_Data_Agent_SHIP26</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">31</div></div><div class="time-col"><div class="time-main">14:36</div><div class="time-range">10 min</div></div><div class="session-card openai"><div class="session-type-row"><div class="session-type">Session 7</div><div class="session-tag tag-openai">OpenAI</div></div><div class="session-title">Session 7 — OpenAI</div><div class="session-speakers"><div class="speaker">Romain Huet <span>— Head of Developer Experience, OpenAI</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 2</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">33</div></div><div class="time-col"><div class="time-main">14:47</div><div class="time-range">18 min</div></div><div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 8</div><div class="session-tag tag-sponsor">Callstack</div></div><div class="session-title">Session 8 — Callstack</div><div class="session-speakers"><div class="speaker">Michal Pierzchala <span>— Principal Engineer, Callstack</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 3</span><span class="meta-item"><strong>GFX:</strong> SHIP 2026 — Callstack</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">35</div></div><div class="time-col"><div class="time-main">15:06</div><div class="time-range">18 min</div></div><div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 9</div><div class="session-tag tag-sponsor">ElevenLabs</div></div><div class="session-title">Session 9 — ElevenLabs: Building Voice Agents with ElevenLabs and AI SDK</div><div class="session-speakers"><div class="speaker">Alex Holt <span>— CTO Field Engineering, ElevenLabs</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 4</span><span class="meta-item"><strong>Notes:</strong> Demo laptop</span></div></div></div></div>
+    <div class="divider"></div>
+    <div class="session-group"><div class="time-row"><div class="cue-col"><div class="cue-num">37</div></div><div class="time-col"><div class="time-main">15:25</div><div class="time-range">19 min</div></div><div class="session-card sponsor"><div class="session-type-row"><div class="session-type">Session 10</div><div class="session-tag tag-sponsor">Vercel</div></div><div class="session-title">Session 10 — Vercel: Software That Ships Itself</div><div class="session-speakers"><div class="speaker">Malavika Tadeusz <span>— Product Manager, Vercel</span></div></div><div class="session-meta"><span class="meta-item"><strong>Mic:</strong> Radio mic 5</span><span class="meta-item"><strong>GFX:</strong> SHIP 2026 — Software that ships itself</span></div></div></div></div>
+  </main>
+</div>
+
+<footer>
+  <div class="footer-left">
+    <strong>gassProductions</strong><br />
+    Live Event and Creative Video Production Services<br />
+    Unit 2, The Granary, Home Farm, Westerham, Kent TN16 1SL<br />
+    +44 (0)1959 546 841 — info@gassproductions.co.uk
+  </div>
+  <div class="footer-right">
+    Vercel Ship LDN 26 — Magazine London<br />
+    17 June 2026<br />
+    <a href="https://gassproductions.co.uk">gassproductions.co.uk</a>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + tab).classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
